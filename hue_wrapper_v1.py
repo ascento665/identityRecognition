@@ -27,8 +27,8 @@ class HueWrapperV1(HueWrapperBase):
         else:
             print("ERROR: config file not found.")
             exit()
-        self.url = 'http://' + self.bridge_ip + \
-            '/api/' + self.usr_name + '/lights/1/state'
+        self.url = self.bridge_ip + self.usr_name + '/lights/1/state'
+        self.headers = {'Authorization': 'Bearer pGMBx9NF9SZXprHb6ZbJ86zN0PMV', 'Content-Type': 'application/json'}
 
         # set rgb Converter
         self.converter = Converter(GamutC)
@@ -54,7 +54,7 @@ class HueWrapperV1(HueWrapperBase):
         """
         data = data[0:-1] + ', "bri":255, "transitiontime":0}'
         print(data)
-        requests.put(url, data=data)
+        requests.put(url, data=data, headers=self.headers)
 
     def set_mode(self, mode):
         """
