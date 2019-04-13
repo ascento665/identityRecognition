@@ -8,10 +8,10 @@ from events import Events
 from hue_wrapper_v1 import HueWrapperV1 as HueWrapper
 
 rekognition = boto3.client('rekognition')
+s3 = boto3.resource('s3')
 
 
 # ------------ Helper Functions ---------------
-
 
 def is_face_known(bucket, key, collection_id):
     """
@@ -52,14 +52,27 @@ def environment_handler(event, environments):
     void
     """
 
-    # TODO load active environment
-    active_env_name = 'off'  # TODO remove
+    # load the currently active environment from a json in s3
+    state_object = s3.Object('asc-user-db', 'state-info/state.json')
+    file_content = state_object.get()['Body'].read().decode('utf-8')
+    json_content = json.loads(file_content)
+    # returns a string containing the name
+    old_active_env_name = json_content['active_env']
 
     # call the transition function form the currently active environment
-    active_env_name = environments[active_env_name].transitions[event.name]()
+    new_active_env_name = environments[old_active_env_name].transitions[event.name](
+    )
 
-    # TODO save active environment
-    print('active env is ', active_env_name)
+    # update the active state and save to json in s3
+    json_content['active_env'] = new_active_env_name
+    state_object.put(Body=bytes(json.dumps(
+        json_content, indent=2).encode('utf-8')))
+
+    # logging
+    print('[environment_handler] changed env from {} to {}'.format(
+        old_active_env_name, new_active_env_name))
+
+    return
 
 
 def lambda_handler(event, context):
@@ -71,11 +84,9 @@ def lambda_handler(event, context):
     key = urllib.unquote_plus(
         event['Records'][0]['s3']['object']['key'].encode('utf8'))
 
-    print('*****called lambda function')
     try:
         # test if we know the person
         is_known = is_face_known(bucket, key,   'user-faces')
-        print('is face known? ', is_known)
 
         # prepare environment handler
         # SETUP add more environments here
@@ -88,11 +99,14 @@ def lambda_handler(event, context):
 
         # call appropiate event on environment handler
         if is_known:
+            # logging
+            print('[lambda_handler] received face which is known')
             environment_handler(Events.good_guy_entering, environments)
-        else:
-            environment_handler(Events.bad_guy_entering, environments)
 
-        print('**** ending function call')
+        else:
+            # logging
+            print('[lambda_handler] received face which is not known')
+            environment_handler(Events.bad_guy_entering, environments)
 
     except Exception as e:
         print(e)

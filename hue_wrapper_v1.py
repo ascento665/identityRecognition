@@ -28,7 +28,8 @@ class HueWrapperV1(HueWrapperBase):
             print("ERROR: config file not found.")
             exit()
         self.url = self.bridge_ip + self.usr_name + '/lights/1/state'
-        self.headers = {'Authorization': 'Bearer pGMBx9NF9SZXprHb6ZbJ86zN0PMV', 'Content-Type': 'application/json'}
+        self.headers = {'Authorization': 'Bearer pGMBx9NF9SZXprHb6ZbJ86zN0PMV',
+                        'Content-Type': 'application/json'}
 
         # set rgb Converter
         self.converter = Converter(GamutC)
@@ -39,7 +40,7 @@ class HueWrapperV1(HueWrapperBase):
         self.set_mode(0)
         time.sleep(0.5)
 
-    def send_command(self, url, data):
+    def _send_command(self, url, data):
         """
         send specific command to lamp
 
@@ -53,7 +54,6 @@ class HueWrapperV1(HueWrapperBase):
         void
         """
         data = data[0:-1] + ', "bri":255, "transitiontime":0}'
-        print(data)
         requests.put(url, data=data, headers=self.headers)
 
     def set_mode(self, mode):
@@ -71,7 +71,6 @@ class HueWrapperV1(HueWrapperBase):
         -------
         void
         """
-        print('mode called')
         if mode == 0:
             data = '{"on":false}'
             self.state = 0
@@ -83,9 +82,7 @@ class HueWrapperV1(HueWrapperBase):
         else:
             print("Warning: No mode selected.")
             return
-        print('trying to send command')
-        self.send_command(self.url, data)
-        print('command sent')
+        self._send_command(self.url, data)
 
     def set_color(self, r, g, b):
         """
@@ -103,7 +100,7 @@ class HueWrapperV1(HueWrapperBase):
         """
         xy = self.converter.rgb_to_xy(r, g, b)
         data = '{"xy":[' + str(xy)[1:-1] + ']}'
-        self.send_command(self.url, data)
+        self._send_command(self.url, data)
 
     def toggle_on_off(self):
         """

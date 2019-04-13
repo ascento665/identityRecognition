@@ -26,7 +26,6 @@ class EnvironmentBase(object):
     def activate_environment(self, name):
         if name == 'off':
             self.light.set_mode(0)
-            self.light.set_color(0, 0, 0)
 
         elif name == 'normal':
             self.light.set_mode(1)
@@ -83,7 +82,7 @@ class EnvironmentNormal(EnvironmentBase):
 
     def bad_guy_entering(self):
         # turn hue on and red
-        return self.activate_environment('normal')
+        return self.activate_environment('intruder')
 
 
 class EnvironmentIntruder(EnvironmentBase):
