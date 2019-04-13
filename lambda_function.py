@@ -5,7 +5,7 @@ from decimal import Decimal
 import boto3
 from environments import EnvironmentIntruder, EnvironmentNormal, EnvironmentOff
 from events import Events
-from hue_wrapper import HueWrapperBase as HueWrapper
+from hue_wrapper_v1 import HueWrapperV1 as HueWrapper
 
 rekognition = boto3.client('rekognition')
 
