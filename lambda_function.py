@@ -6,6 +6,7 @@ import boto3
 
 rekognition = boto3.client('rekognition')
 lambda_client = boto3.client('lambda')
+s3_client = boto3.client('s3')
 
 
 # ------------ Helper Functions ---------------
@@ -53,12 +54,21 @@ def lambda_handler(event, context):
         if is_known:
             # logging
             print('[lambda_handler] received face which is known')
+
+            # remove object from bucket if known
+            response = s3_client.delete_object(
+                Bucket=bucket,
+                Key=key
+            )
             payload_dict = {'event': 'good_guy_entering'}
 
         else:
             # logging
             print('[lambda_handler] received face which is not known')
-            payload_dict = {'event': 'bad_guy_entering'}
+            payload_dict = {'event': 'bad_guy_entering',
+                            'bucket': bucket,
+                            'key': key,
+                            }
 
         # save dict to json locally
         response = lambda_client.invoke(
